@@ -1,5 +1,5 @@
 # **前言**
- [YYModel](https://github.com/ibireme/YYModel)是ibireme写的用于模型转换的框架，可从5方面去分析YYModel。
+ [YYModel](https://github.com/ibireme/YYModel)是ibireme写的用于模型转换的框架，可从下面几个方面去分析YYModel。
   - 文件结构：有哪些文件，每个文件大致的功能
   - 类结构及关联：有哪些类，类之间关联
   - 数据流向：debug，看数据是如何转换及看各函数之间的调用关系

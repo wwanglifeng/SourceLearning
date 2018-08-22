@@ -7,14 +7,13 @@
   - 整理源代码中自己理解不深的点（如语法、关键字的运用）
 
 # **文件结构**
-3部分，3000左右行代码
-- YYModel.h 
-            引入NSObject+YYModel.h 和 YYClassInfo.h
-- YYClassInfo.h
-           定义 YYClassIvarInfo、YYClassMethodInfo、YYClassPropertyInfo、YYClassInfo类
-- NSObject+YYModel.h
-            1、为NSObject、NSArray、NSDictionary写了一些category
-            2、定义了_YYModelPropertMeta、_YYModelMeta
+文件可分3部分，总共3000左右行代码
+- YYModel.h(.m) 
+引入NSObject+YYModel.h 和 YYClassInfo.h，如果要使用YYModel，在对应文件中#import "YYModel.h"。
+- YYClassInfo.h(.m)
+类(YYClassInfo)、属性(YYClassPropertyInfo)、函数(YYClassMethodInfo)、实例变量(YYClassIvarInfo)相关的类及赋值操作。
+- NSObject+YYModel.h(.m)
+定义了_YYModelPropertMeta、_YYModelMeta类，json数据转Model的实现均在该文件中。
 
 #**类结构及关联**
 
@@ -315,3 +314,4 @@ YYModel也是基于runtime机制去实现模型转换，YYModel除了支持单�
 
 ###类结构定义的目的
 为什么这么定义：跟runtime提供的接口有关
+

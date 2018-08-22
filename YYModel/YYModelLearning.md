@@ -1,4 +1,3 @@
-[TOC]
 # **前言**
  [YYModel](https://github.com/ibireme/YYModel)是ibireme写的用于模型转换的框架，可从5方面去分析YYModel。
   - 文件结构：有哪些文件，每个文件大致的功能

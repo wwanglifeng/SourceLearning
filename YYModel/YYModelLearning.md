@@ -8,11 +8,11 @@
 
 # **文件结构**
 文件可分3部分，总共3000左右行代码
-- YYModel.h(.m) 
+- YYModel.h(.m)  
 引入NSObject+YYModel.h 和 YYClassInfo.h，如果要使用YYModel，在对应文件中#import "YYModel.h"。
-- YYClassInfo.h(.m)
+- YYClassInfo.h(.m)  
 类(YYClassInfo)、属性(YYClassPropertyInfo)、函数(YYClassMethodInfo)、实例变量(YYClassIvarInfo)相关的类及赋值操作。
-- NSObject+YYModel.h(.m)
+- NSObject+YYModel.h(.m)  
 定义了_YYModelPropertMeta、_YYModelMeta类，json数据转Model的实现均在该文件中。
 
 #**类结构及关联**

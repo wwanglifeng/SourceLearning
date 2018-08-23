@@ -15,29 +15,29 @@
 - NSObject+YYModel.h(.m)  
 定义了_YYModelPropertMeta、_YYModelMeta类，json数据转Model的实现均在该文件中。
 
-#**类结构及关联**
+# **类结构及关联**
 
 把主要的类及其关联画了下
-![图1](https://upload-images.jianshu.io/upload_images/1477435-8d9387516e608aee.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![图1](https://github.com/wwanglifeng/SourceLearning/blob/master/images/YYModelClassImage.png)
 对照上图，再对各个类做一些简单的介绍
 ## YYClassIvarInfo
-类结构中主要包含了 ivar、name等一些基本成员变量，用于保存成员变量的信息。通过以下函数进行赋值。
+包含Ivar相关的一些信息，如name、offset、typeEncoding，通过initWithIvar函数创建。
 ```
 - (instancetype)initWithIvar:(Ivar)ivar;
 ```
 ## YYClassMethodInfo
-类结构中主要包含SEL、IMP、name等一些基本属性，用于保存函数的信息
-通过以下函数进行赋值
+包含method相关的一些信息，如SEL、IMP、name、typeEncoding、returnTypeEncoding、argumentTypeEncoding，通过initWithMethod函数创建。
+
 ```
 - (instancetype)initWithMethod:(Method)method;
 ```
 ## YYClassPropertyInfo
-类结构中包含name、getter、setter属性，用于保存成员属性的信息。通过以下函数进行赋值
+包含property相关的一些信息，如name、getter、setter、typeEncoding等，通过initWithProperty函数创建。
 ```
 - (instancetype)initWithProperty:(objc_property_t)property;
 ```
 ## YYClassInfo
-类结构中包含superCls、metaCls、name等一些类相关的信息。同时也将上述三个类做为类的一部分。通过以下函数进行赋值。
+包含class相关的一些信息，如superCls、metaCls、name及上述的3个类。通过initWithClass函数创建。
 ```
 + (nullable instancetype)classInfoWithClass:(Class)cls;
 ```
@@ -47,28 +47,15 @@
 ```
 ## _YYModelPropertyMeta
 类结构中主要包含YYClassPropertyInfo对象、name、mappedToKey等一些相关的信息，用来描述当前实例的属性信息。
-通过以下函数进行赋值
+通过metaWithClassInfo函数创建
 ```
 + (instancetype)metaWithClassInfo:(YYClassInfo *)classInfo propertyInfo:(YYClassPropertyInfo *)propertyInfo generic:(Class)generic;
 ```
 ## _YYModelMeta
-类结构中包含了当前类的信息和不同情况下的属性数组。看定义的类结构最直观。
+包含了当前类的信息和不同的匹配情况。通过metaWithClass函数创建。metaWithClass中会判断是否有缓存，如果无，就通过调用initWithClass来创建_YYModelMeta,同时讲信息缓存起来，供下次使用
 ```
-@interface _YYModelMeta : NSObject {
-    YYClassInfo *_classInfo;
-    /// Key:mapped key and key path, Value:_YYModelPropertyMeta.
-    NSDictionary *_mapper;
-       /// Array<_YYModelPropertyMeta>, all property meta of this model.
-    NSArray *_allPropertyMetas;
-    /// Array<_YYModelPropertyMeta>, property meta which is mapped to a key path.
-    NSArray *_keyPathPropertyMetas;
-    /// Array<_YYModelPropertyMeta>, property meta which is mapped to multi keys.
-    NSArray *_multiKeysPropertyMetas;
-    /// The number of mapped key (and key path), same to _mapper.count.
-    NSUInteger _keyMappedCount;
-
-   //剩下的省略。。
-}
++ (instancetype)metaWithClass:(Class)cls;
+- (instancetype)initWithClass:(Class)cls;
 ```
 
 

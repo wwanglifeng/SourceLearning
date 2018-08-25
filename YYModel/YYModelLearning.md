@@ -135,9 +135,9 @@ YYModel还提供了几个protocol，支持匹配特定的JSON格式。
 ```
 
 # **总结**
-YYModel实现的几大关键点
-1.runtime机制，操作基本都围绕着runtime展开
-2.缓存机制，提高转换效率
-3.提供protocol支持用户自定义匹配模式
+YYModel实现的几大关键点    
+1.runtime机制，操作基本都围绕着runtime展开      
+2.缓存机制，提高转换效率    
+3.提供protocol支持用户自定义匹配模式  
 
 

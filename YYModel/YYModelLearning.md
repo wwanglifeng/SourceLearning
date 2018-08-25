@@ -59,7 +59,7 @@
 ```
 
 
-#**数据流向**
+## **数据流向**
 看完类的大致结构，再来看下从调用YYModel提供给我们的接口开始，函数之间是如何跳转的，传入的参数又经过了那几道转换。
 ## yy_modelWithJSON
    该接口接受NSDictionary, NSString,NSData三种类型的json串，返回一个新的是实例对象。实现主要包含以下两部分，重点在第二个函数实现。
@@ -69,236 +69,75 @@
 ```
 
 来看下yy_modelWithDictionary是如何将dic数据转换成对象的。核心的函数也是两个。
+
 ````
 //根据调用的类，对YYClassIvarInfo、YYClassMethodInfo、YYClassPropertyInfo、YYClassInfo、_YYModelPropertMeta、_YYModelMeta进行赋值
 [_YYModelMeta metaWithClass:cls] 
 //对类的属性进行赋值操作
-[one yy_modelSetWithDictionary:dictionary]
-```
-通过这3个函数就实现了json串到对象的转换，看似简单，其实函数中还包含不少逻辑，还是以图的形式来的实在。看下图，函数的执行顺序从左到右
-![图2](https://diycode.b0.upaiyun.com/photo/2018/eb0cde2ba90041333f1f7fa7328892b5.png)
+[one yy_modelSetWithDictionary:dictionary]   
+````
 
-图的方式可能还有些不直观，下面把主要的代码给列出来，能更清晰的知道函数之间的调用关系。类名和函数名之后都加了test 用于区分。
-```
-//YYClassIvarInfoTest
-@interface YYClassIvarInfoTest: NSObject
-@property (nonatomic, assign, readonly) Ivar ivar;
-@property (nonatomic, strong, readonly) NSString *name;
-
-- (instancetype)initWithIvar:(Ivar)ivar;
-
-@end
-
-@implementation YYClassIvarInfoTest
-
-- (instancetype)initWithIvar:(Ivar)ivar{
-    _ivar = ivar;
-    
-    const char *name = ivar_getName(ivar);
-    _name = [NSString stringWithUTF8String:name];
-    
-    return self;
-    
-}
-
-@end
-
-
-//YYClassInfoTest
-@interface YYClassInfoTest: NSObject
-@property (nonatomic, assign, readonly) Class cls;
-@property (nullable, nonatomic, assign, readonly) Class superCls;
-@property (nullable, nonatomic, assign, readonly) Class metaCls;
-@property (nonatomic, readonly) BOOL isMeta;
-@property (nonatomic, strong, readonly) NSString *name;
-
-@property (nullable, nonatomic, strong, readonly) NSDictionary<NSString *, YYClassIvarInfoTest *> *ivarInfos;
-
-- (instancetype)initWithClass:(Class)cls;
-
-@end
-
-@implementation YYClassInfoTest
-
-- (instancetype)initWithClass:(Class)cls{
-    if (!cls) return nil;
-    
-    _cls = cls;
-    _superCls = class_getSuperclass(cls);
-    
-    _isMeta = class_isMetaClass(cls);
-    if(!_isMeta){
-        _metaCls = objc_getMetaClass(class_getName(cls));
-    }
-    
-    [self _update];
-    
-    _name = NSStringFromClass(cls);
-    
-    
-    return self;
-}
-
-- (void)_update{
-    _ivarInfos = nil;
-    
-    Class cls = self.cls;
-    
-    unsigned int ivarCount = 0;
-    Ivar *ivars = class_copyIvarList(cls, &ivarCount);
-    if(ivars){
-        NSMutableDictionary *ivarInfos = [NSMutableDictionary new];
-        _ivarInfos = ivarInfos;
-        for(unsigned int i = 0; i < ivarCount; i++){
-            Ivar ivar = ivars[i];
-            
-            YYClassIvarInfoTest *info = [[YYClassIvarInfoTest alloc] initWithIvar:ivar];
-            if(info.name){
-                ivarInfos[info.name] = info;
-            }
-        }
-                
-        free(ivars);
-    }
-    
-}
-
-+ (instancetype)metaWithClass:(Class)cls{
-    //是否有缓存判断
-    YYClassInfoTest *meta = [[YYClassInfoTest alloc] initWithClass:cls];
-    return meta;
-}
-
-@end
-
-
-///_YYModelPropertyMetaTest
-@interface _YYModelPropertyMetaTest: NSObject
-
-@end
-@implementation _YYModelPropertyMetaTest
-
-@end
-
-
-
-
-///_YYModelMetaTest
-@interface _YYModelMetaTest: NSObject{
-    @package
-    YYClassInfoTest *_classInfoTest;
-    NSDictionary *_mapper;
-}
-
-@end
-
-@implementation _YYModelMetaTest
-
-- (instancetype)initWithClass:(Class)cls{
-    YYClassInfoTest *classInfoTest = [YYClassInfoTest metaWithClass:cls];
-    _classInfoTest = classInfoTest;
-    
-   
-    
-    return self;
-}
-
-+ (instancetype)metaWithClass:(Class)cls{
-    //是否有缓存判断
-    _YYModelMetaTest *meta = [[_YYModelMetaTest alloc] initWithClass:cls];
-    return meta;
-}
-
-@end
-
-typedef struct {
-    void *modelMeta;  ///< _YYModelMeta
-    void *model;      ///< id (self)
-    void *dictionary; ///< NSDictionary (json)
-} ModelSetContextTest;
-
-static void ModelSetWithDictionaryTestFunction(const void *_key, const void *_value, void *_context) {
-    ModelSetContextTest *context = _context;
-    __unsafe_unretained _YYModelMetaTest *meta = (__bridge _YYModelMetaTest *)(context->modelMeta);
-    __unsafe_unretained _YYModelPropertyMetaTest *propertyMeta = [meta->_mapper objectForKey:(__bridge id)(_key)];
-    __unsafe_unretained id model = (__bridge id)(context->model);
-    while (propertyMeta) {
-        if (propertyMeta->_setter) {
-            
-            //ModelSetValueForProperty函数的核心是调用objc_msgSend进行赋值
-            ModelSetValueForProperty(model, (__bridge __unsafe_unretained id)_value, propertyMeta);
-            
-        }
-
-    };
-}
-
-
-///YYModelTest
-@interface NSObject (YYModelTest)
-
-+ (nullable instancetype)yy_modelWithJSONTest:(id) json;
-
-@end
-
-@implementation NSObject (YYModelTest)
-
-- (BOOL)yy_modelSetWithDictionary:(NSDictionary *)dic {
-    _YYModelMetaTest *modelMeta = [_YYModelMetaTest metaWithClass:object_getClass(self)];
-    
-    ModelSetContextTest context = {0};
-    context.modelMeta = (__bridge void *)(modelMeta);
-    context.model = (__bridge void *)(self);
-    context.dictionary = (__bridge void *)(dic);
-    
-    CFDictionaryApplyFunction((CFDictionaryRef)dic, ModelSetWithDictionaryTestFunction, &context);
-
-    return YES;
-}
-
-+ (instancetype)yy_modelWithJSONTest:(id)json {
-    
-    Class cls = [self class];
-    _YYModelMetaTest *modelMeta = [_YYModelMetaTest metaWithClass:cls];
-    
-    NSObject *one = [cls new];
-    if ([one yy_modelSetWithDictionary:json]) return one;
-    return nil;
-    
-}
-
-
-@end
-
-
-```
+通过这3个函数就实现了json串到对象的转换,附上一张时序图，看的更直观。
+![图2](https://github.com/wwanglifeng/SourceLearning/blob/master/images/YYModel%E6%97%B6%E5%BA%8F%E5%9B%BE.png)
 
 ## yy_modelToJSONObject
 该函数的流程相对简单点，从_YYModelMeta获取相关的数据赋值给NSDictionary对象。不再做扩展。
 
 
-#**重点功能剖析**
-##键值的匹配
+# **重点功能剖析**
+## 键值的匹配
 如果不用第三方框架，自己写代码来做转换，最简单方式如下
 ```
 //省略部分代码
  User *user = [[User alloc] init];
  user.name = json[@"name"];
 ```
-这个方式在类属性较多的情况下，需要手动写很多相似代码，比如
+使用YYModel，免去了手动转换的处理。同时YYModel也替我们处理了json串中的数据格式与我们定义的格式不一致的情况，避免了异常的出现。
+
+YYModel还提供了几个protocol，支持匹配特定的JSON格式。
+1.指定对于需要匹配的key，或者匹配多个key。
 ```
-User *user = [[User alloc] init];
-user.name = json[@"name"];
-user.birthday = json[@"birthday"];
-user.sex = json[@"sex"];
-user.age = json[@"age"];
++ (nullable NSDictionary<NSString *, id> *)modelCustomPropertyMapper;
 ```
-极端的情况下，如果有100个属性，那相似代码就会更多。有一种比较好的方式是通过runtime机制，通过循环对对象属性赋值。
-YYModel也是基于runtime机制去实现模型转换，YYModel除了支持单个键值匹配，还支持一些特定的匹配
+2.如某个属性中是某个类的数组，这种情况下就需要实现以下protocol。
+```
++ (nullable NSDictionary<NSString *, id> *)modelContainerPropertyGenericClass;
+```
+3.如需根据JSON数据中的返回值，去匹配不同的model就需实现以下protocol。
+```
++ (nullable Class)modelCustomClassForDictionary:(NSDictionary *)dictionary;
+```
+4.YYModel还提供了白名单和黑名单，用户可以在对一些特定的key进行过滤，不参与model转换
+```
++ (nullable NSArray<NSString *> *)modelPropertyBlacklist;
++ (nullable NSArray<NSString *> *)modelPropertyWhitelist;
 
-##缓存机制
+```
+## 缓存机制
+在metaWithClass和classInfoWithClass中分别有2处理关于缓存的逻辑。优先会去取缓存里的数据，如果没有再进行转换然后缓存。缓存的目的是因为model类的结构通常不会动态的去修改。如果你通过runtime调整model类，调整之后需要调用setNeedUpdate去更新cache。
+```
+//省略部分代码
++ (instancetype)metaWithClass:(Class)cls {
+    
+    static CFMutableDictionaryRef cache;
+    
+   cache = CFDictionaryCreateMutable(CFAllocatorGetDefault(), 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+  
+    });
+}
 
++ (instancetype)classInfoWithClass:(Class)cls {
+    static CFMutableDictionaryRef classCache;
+   
+    classCache = CFDictionaryCreateMutable(CFAllocatorGetDefault(), 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+}
 
-###类结构定义的目的
-为什么这么定义：跟runtime提供的接口有关
+```
+
+# **总结**
+YYModel实现的几大关键点
+1.runtime机制，操作基本都围绕着runtime展开
+2.缓存机制，提高转换效率
+3.提供protocol支持用户自定义匹配模式
+
 

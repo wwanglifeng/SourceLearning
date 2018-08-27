@@ -11,7 +11,7 @@
 ## 解决什么问题
 解决之前native与JavaScript交互必须通过UIWebview或者WKWebView这个媒介。【可扩展】（通过UIWebView或WKWebView与js交互）
 
-##常用的方法
+## 常用的方法
 先了解2个对象：
       1、  JSContext: a JavaScript execution environment
       2、  JSValue: a reference to a JavaScript value. 可以用JSValue在JS和native之间做一些基础类型的转换。【可扩展：JS和OC之间的类型转换表】
